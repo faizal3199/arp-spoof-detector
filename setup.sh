@@ -26,5 +26,8 @@ echo "#ARP spoof detector **don't edit next line**">>/tmp/arpCronJobSetup
 echo "@reboot PID=\$(pgrep -o gnome-session) && export DBUS_SESSION_BUS_ADDRESS=\$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/\$PID/environ|cut -d= -f2-) && export DISPLAY=:0 && python /opt/arp-spoof-detector/spoof-engine/scripts/sniffer.py">>/tmp/arpCronJobSetup
 crontab /tmp/arpCronJobSetup
 
-echo -e "Setting up users\033[0m"
+echo -e "Setting up users"
 sudo python /opt/arp-spoof-detector/spoof-engine/scripts/install.py
+
+echo -e "Starting service\033[0m"
+sudo python /opt/arp-spoof-detector/spoof-engine/scripts/sniffer.py
