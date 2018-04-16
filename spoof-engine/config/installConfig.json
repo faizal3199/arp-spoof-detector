@@ -2,6 +2,6 @@
   "serverURL":"http://172.25.14.89:8000/",
   "serverSignUpEndPoint":"signup",
   "serverSubmitEndPoint":"/infection/submit",
-  "userDataJsonFile":"/opt/arp-spoof-detector/config/userData.json",
+  "userDataJsonFile":"/opt/arp-spoof-detector/spoof-engine/config/userData.json",
   "installDir":"/opt/arp-spoof-detector/"
 }

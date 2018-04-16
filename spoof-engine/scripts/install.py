@@ -8,7 +8,7 @@ class InstallModule(object):
         import yaml,os
         # Load configuration data from a config file. Easily changeable
         configPath = os.path.join(os.path.dirname(__file__),'../','config/')
-        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json')))
+        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json'),'r'))
 
     def install(self):
         '''Main install module. Fetches information from user and setup
@@ -30,10 +30,10 @@ class InstallModule(object):
         #Get an interface from user
         networkInterface = pcap.findalldevs()
         print('\nChoose an interface to work on:')
-        print("%s%s:%s"%('Interface',' '*(10-len('Interface'),'Choice')))
+        print("%s%s:%s"%('Interface',' '*(10-len('Interface')),'Choice'))
 
         for x in range(0,len(networkInterface)):
-            print("%s%s:%d"%(networkInterface[x][0],' '*(10-len(networkInterface[x][0]),x+1)))
+            print("%s%s:%d"%(networkInterface[x][0],' '*(10-len(networkInterface[x][0])),x+1))
 
         #Validate choice
         choice = int(raw_input('Enter choice:')) -1

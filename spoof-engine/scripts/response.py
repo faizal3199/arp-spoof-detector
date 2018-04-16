@@ -11,8 +11,8 @@ class ResponseModule(object):
 
         # Load configuration data from a config file. Easily changeable
         configPath = os.path.join(os.path.dirname(__file__),'../','config/')
-        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json')))
-        self.userDataArray = yaml.safe_load(self.configArray['userDataJsonFile'])
+        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json'),'r'))
+        self.userDataArray = yaml.safe_load(open(self.configArray['userDataJsonFile'],'r'))
 
         #Load network configs
         self.myMAC = myMAC

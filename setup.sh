@@ -15,9 +15,10 @@ echo "Installing dependencies"
 sudo apt-get install python-libpcap
 sudo -H pip2 install -r $SCRIPTPATH/requirements.txt
 
-echo "Creating  and copying required Files"
+echo "Creating and copying required Files"
 
 echo "Creating directory /opt/arp-spoof-detector/"
+rm -rf /opt/arp-spoof-detector/
 sudo cp -r $SCRIPTPATH/ /opt/arp-spoof-detector/
 
 echo -e "\033[1;37mSetting up Cron Job"
@@ -29,5 +30,7 @@ crontab /tmp/arpCronJobSetup
 echo -e "Setting up users"
 sudo python /opt/arp-spoof-detector/spoof-engine/scripts/install.py
 
-echo -e "Starting service\033[0m"
-sudo python /opt/arp-spoof-detector/spoof-engine/scripts/sniffer.py
+if [ $? -eq 0 ]; then
+  echo -e "Starting service\033[0m"
+  sudo python /opt/arp-spoof-detector/spoof-engine/scripts/sniffer.py
+fi

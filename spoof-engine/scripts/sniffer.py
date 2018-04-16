@@ -12,8 +12,8 @@ class PacketSniffer(object):
         import os,yaml
         self.verify_installation() #verify before start
         configPath = os.path.join(os.path.dirname(__file__),'../','config/')
-        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json')))
-        self.userDataArray = yaml.safe_load(self.configArray['userDataJsonFile'])
+        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json'),'r'))
+        self.userDataArray = yaml.safe_load(open(self.configArray['userDataJsonFile'],'r'))
 
         self.interface = self.userDataArray['interfaceName']
         # self.interface = 'enp3s0'
@@ -61,7 +61,7 @@ class PacketSniffer(object):
         status = InstallModule().get_installation_status()
         if status == False:
             print('ARP spoof detector is not installed properly.')
-            print('Use install.sh for installation.')
+            print('Use setup.sh for installation.')
             exit(1)
 
     def do_ARP(self,data):
