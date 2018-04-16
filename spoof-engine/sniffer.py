@@ -1,5 +1,4 @@
 import pcap,socket,threading,sys
-from uuid import getnode as get_mac
 from parser import *
 from engine import SpoofDetectorEngine
 
@@ -65,8 +64,11 @@ class PacketSniffer(object):
         return True
 
     def getMyMAC(self):
-        '''Fetches MAC address'''
-        return get_mac()
+        '''Fetches MAC address for any interface'''
+        import fcntl
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', self.interface[:15]))
+        return int(info[18:24].encode('hex'),16)
 
     def getMyIP(self):
         '''Fetch IP in dotted format 0.0.0.0'''
