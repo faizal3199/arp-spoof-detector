@@ -7,14 +7,18 @@ fi
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 
-
 echo -e "\033[0;36m---------------'ARP-spoof-detector v1---------------"
 
 echo -e "\033[1;33mSetting up at /opt/arp-spoof-detector/"
+
+echo "Installing dependencies"
+sudo apt-get install python-libpcap
+sudo -H pip2 install -r $SCRIPTPATH/requirements.txt
+
 echo "Creating  and copying required Files"
 
 echo "Creating directory /opt/arp-spoof-detector/"
-cp -r $SCRIPTPATH/ /opt/arp-spoof-detector/
+sudo cp -r $SCRIPTPATH/ /opt/arp-spoof-detector/
 
 echo -e "\033[1;37mSetting up Cron Job"
 crontab -l >/tmp/arpCronJobSetup
@@ -23,4 +27,4 @@ echo "@reboot PID=\$(pgrep -o gnome-session) && export DBUS_SESSION_BUS_ADDRESS=
 crontab /tmp/arpCronJobSetup
 
 echo -e "Setting up users\033[0m"
-python /opt/arp-spoof-detector/spoof-engine/scripts/install.py
+sudo python /opt/arp-spoof-detector/spoof-engine/scripts/install.py
