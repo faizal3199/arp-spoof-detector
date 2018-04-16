@@ -63,7 +63,7 @@ class InstallModule(object):
             pass1 = getpass('Enter password :')
             pass2 = getpass('Verify password:')
 
-            if pass1==pas2:
+            if pass1==pass2:
                 break
             print('Passwords don\'t match. Try again')
 
@@ -72,10 +72,10 @@ class InstallModule(object):
 
     def send_to_server(self,data,endPoint):
         '''Send data to server at provided endPoint'''
-        import request
+        import requests
         targetUrl = self.configArray['serverURL'] + endPoint
         #Send request to server and get response
-        r = request.post(targetUrl,data=data)
+        r = requests.post(targetUrl,data=data)
         return r.text,r.status_code
 
     def setup_file(self,data):
@@ -96,3 +96,7 @@ class InstallModule(object):
         if os.path.exists(self.configArray['userDataJsonFile']):
             return True
         return False
+
+if __name__ == '__main__':
+    installObject = InstallModule()
+    installObject.install()

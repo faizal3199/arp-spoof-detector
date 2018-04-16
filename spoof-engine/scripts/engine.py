@@ -49,7 +49,7 @@ class SpoofDetectorEngine(object):
                 self.countTable[data['arp_source_ip']] = False
 
             # Check our list of verified host. If False, give a chance to prove itself
-            if verifiedHost.get(data['arp_source_ip']) == data['eth_source_mac']:
+            if self.verifiedHost.get(data['arp_source_ip']) == data['eth_source_mac']:
                 return True
 
             print('\n**************Sending ICMP Frame for verification to %s ************\n'%socket.inet_ntoa(data['arp_source_ip']))
@@ -97,7 +97,7 @@ class SpoofDetectorEngine(object):
             else:
                 print('\n**************ICMP verification successfull for %s ************\n'%socket.inet_ntoa(data['arp_source_ip']))
                 #Entry is safe. Update our tables
-                verifiedHost[data['arp_source_ip']] == data['eth_source_mac']
+                self.verifiedHost[data['arp_source_ip']] == data['eth_source_mac']
         else:
             self.responseObject.alert(data)
             return False

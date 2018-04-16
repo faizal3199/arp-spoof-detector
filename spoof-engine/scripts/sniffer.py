@@ -6,9 +6,17 @@ class PacketSniffer(object):
     myMac = None
     myIP = None
 
-    def __init__(self,interface):
-        '''Intialize object by setting mac and ip globally'''
-        self.interface = interface
+    def __init__(self):
+        '''Intialize object by setting mac and ip globally.
+        Verifies installation internally'''
+        import os,yaml
+        self.verify_installation() #verify before start
+        configPath = os.path.join(os.path.dirname(__file__),'../','config/')
+        self.configArray = yaml.safe_load(open(os.path.join(configPath,'installConfig.json')))
+        self.userDataArray = yaml.safe_load(self.configArray['userDataJsonFile'])
+
+        self.interface = self.userDataArray['interfaceName']
+        # self.interface = 'enp3s0'
         PacketSniffer.myMAC = self.getMyMAC()
         PacketSniffer.myIP = self.getMyIP()
 
@@ -16,9 +24,7 @@ class PacketSniffer(object):
         print('My IP: %s'%(PacketSniffer.myIP))
 
     def start(self):
-        '''Main function to start sniffing packet.
-        Verifies intallation internally'''
-        self.verify_installation() #verify before start
+        '''Main function to start sniffing packet.'''
         sniffer = pcap.pcapObject()
         sniffer.open_live(self.interface, 4906, 0, 100) #Fetch packet of 4096 lengths
 
@@ -26,9 +32,16 @@ class PacketSniffer(object):
         self.spoofEngine = SpoofDetectorEngine(self.myMAC,self.myIP,self.interface)
         sys.stdout.write('Starting read\n')
         sys.stdout.flush()
+
+        statsCount = 0
         while True:
             # Handle each packet by using pcap's default callback function
             sniffer.dispatch(1, self.handle_packet)
+            if statsCount == 1000:
+                print sniffer.stats()
+                statsCount = 0
+            else:
+                statsCount += 1
         return False
 
     def handle_packet(self,pktlen,data,timestamp):
@@ -43,9 +56,9 @@ class PacketSniffer(object):
     def verify_installation(self):
         '''Support function for verifying installation.
         Exits if verification fails'''
-        from installer import InstallModule
+        from install import InstallModule
         #Verify installation status
-        status = InstallModule.get_installation_status()
+        status = InstallModule().get_installation_status()
         if status == False:
             print('ARP spoof detector is not installed properly.')
             print('Use install.sh for installation.')
@@ -78,14 +91,10 @@ class PacketSniffer(object):
         return None
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print('Usage: [sudo] python %s <interface name>'%(__name__))
-        exit(1)
-
     try:
-        packetSnifferObject = PacketSniffer(sys.argv[1])
+        packetSnifferObject = PacketSniffer()
         packetSnifferObject.start()
     except Exception as e:
-        print('Error')
+        print('Error occured')
         print(e.message)
         exit(1)
