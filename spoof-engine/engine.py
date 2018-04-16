@@ -1,29 +1,37 @@
 from parser import *
 import socket,time
-# from response import ResponseModule
+from response import ResponseModule
 
 class SpoofDetectorEngine(object):
     countTable = {}
     engineStatus = 'uninitialized'
     ICMPTable = {}
+    verifiedHost = {}
 
     def __init__(self,myMAC,myIP,interface):
+        '''Initialize the service and load usefull variables'''
         if self.engineStatus == 'running':
             print('Engine is already running')
             return False
         SpoofDetectorEngine.engineStatus = 'running'
+
+        #Save relevant variables
         self.interface = interface
-        self.myMAC = struct.pack('!Q',myMAC)[2:]
+        self.myMAC = struct.pack('!Q',myMAC)[2:] # change mac to hex chars
         self.broadcastMAC = '\xff'*6
         self.zeroMAC = '\x00'*6
-        self.myIP = socket.inet_aton(myIP)
+        self.myIP = socket.inet_aton(myIP) # change ip to hex chars
+
+        # Initialize response module
+        self.responseObject = ResponseModule(self.myMAC,self.myIP)
 
     def ARP_handler(self, data):
+        '''Handle ARP packets in scope'''
         # Do basic check by comparing datalink layer address with ARP's
         consistency_check = (data['eth_source_mac'] == data['arp_source_mac'])
         if not consistency_check:
-            #@alert the user
-            print 'consistency_check failed'
+            self.responseObject.alert(data)
+            print('consistency_check failed')
             return False
 
         #Handle gratuitous ARP replies
@@ -31,8 +39,8 @@ class SpoofDetectorEngine(object):
         gratuitous = gratuitous or (data['arp_target_mac'] in [self.broadcastMAC,self.zeroMAC])
 
         if not gratuitous and data['eth_target_mac'] != data['arp_target_mac']:
-            #@alert the user
-            print 'consistency_check failed'
+            self.responseObject.alert(data)
+            print('consistency_check failed')
             return False
 
         # Consider the reply packet if system has sent request or it's gratuitous
@@ -40,7 +48,11 @@ class SpoofDetectorEngine(object):
             if not gratuitous:
                 self.countTable[data['arp_source_ip']] = False
 
-            print '\n**************Sending ICMP Frame for verification to %s ************\n'%socket.inet_ntoa(data['arp_source_ip'])
+            # Check our list of verified host. If False, give a chance to prove itself
+            if verifiedHost.get(data['arp_source_ip']) == data['eth_source_mac']:
+                return True
+
+            print('\n**************Sending ICMP Frame for verification to %s ************\n'%socket.inet_ntoa(data['arp_source_ip']))
             # Prepare ICMP frame to send from datalink layer
             ICMP_frame = {
             #Ethernet Frame
@@ -79,49 +91,57 @@ class SpoofDetectorEngine(object):
             time.sleep(5) #Wait 5 seconds for  reply
 
             if self.ICMPTable[data['arp_source_ip']] != None: #NO reply still
-                #@alert user
-                print '\n**************ICMP verification failed for %s ************\n' % socket.inet_ntoa(data['arp_source_ip'])
+                self.responseObject.alert(data)
+                print('\n**************ICMP verification failed for %s ************\n' % socket.inet_ntoa(data['arp_source_ip']))
                 return False
             else:
-                print '\n**************ICMP verification successfull for %s ************\n'%socket.inet_ntoa(data['arp_source_ip'])
-                #Entry is safe
-                pass
+                print('\n**************ICMP verification successfull for %s ************\n'%socket.inet_ntoa(data['arp_source_ip']))
+                #Entry is safe. Update our tables
+                verifiedHost[data['arp_source_ip']] == data['eth_source_mac']
         else:
-            #@alert the user
+            self.responseObject.alert(data)
             return False
 
     def ARP_packet_handler(self, data):
+        '''Find ARP packets under scope and pass to further function.
+        Scope:  1) ARP request packet sent by us(sniff own packets).
+                2) ARP reply packet to our MAC or broadcastMAC.'''
         parsed_data = PacketParser(data).get_parsed_data()
 
         if parsed_data['arp_opcode'] == ARPStructure.OPCODE_REQUEST and parsed_data['eth_source_mac'] == self.myMAC:
-            print parsed_data['arp_source_mac'].encode('hex'),'(',socket.inet_ntoa(parsed_data['arp_source_ip']),')',' ---->> ',parsed_data['eth_target_mac'].encode('hex'),'(',socket.inet_ntoa(parsed_data['arp_target_ip']),')'
-            print '********countTable*************'
+            print('%s (%s) ----->> %s (%s)'%(parsed_data['arp_source_mac'].encode('hex'),socket.inet_ntoa(parsed_data['arp_source_ip']),parsed_data['eth_target_mac'].encode('hex'),socket.inet_ntoa(parsed_data['arp_target_ip'])))
+            print('********countTable*************')
             self.countTable[parsed_data['arp_target_ip']] = True
-            print self.countTable
+            print(self.countTable)
             return True
         elif parsed_data['arp_opcode'] == ARPStructure.OPCODE_REPLY:
             if parsed_data['eth_target_mac'] in [self.myMAC,self.broadcastMAC,self.zeroMAC]:
-                print parsed_data['arp_source_mac'].encode('hex'),'(',socket.inet_ntoa(parsed_data['arp_source_ip']),')',' ---->> ',parsed_data['eth_target_mac'].encode('hex'),'(',socket.inet_ntoa(parsed_data['arp_target_ip']),')'
+                print('%s (%s) ----->> %s (%s)'%(parsed_data['arp_source_mac'].encode('hex'),socket.inet_ntoa(parsed_data['arp_source_ip']),parsed_data['eth_target_mac'].encode('hex'),socket.inet_ntoa(parsed_data['arp_target_ip'])))
                 self.ARP_handler(parsed_data)
                 return True
 
         return False
 
     def ICMP_handler(self, data):
+        '''Handle ICMP packets in scope'''
         #Validate identifier and cross check mac and ip with our table
         if data['icmp_identifier'] == '\x6d\x34' and self.ICMPTable.get(data['ip_source_ip']) == data['eth_source_mac']:
             #Unlock the entry
             self.ICMPTable[data['ip_source_ip']] = None
 
     def ICMP_packet_handler(self,data):
+        '''Find ICMP packets under scope and pass to further function.
+        Scope: ICMP reply packets to current IP'''
         parsed_data = PacketParser(data).get_parsed_data()
 
+        #Scope: ICMP reply packets to our IP
         if parsed_data['icmp_type'] == ICMPStructure.TYPE_REPLY and parsed_data['eth_target_mac'] == self.myMAC:
             self.ICMP_handler(parsed_data)
             return True
         return False
 
     def send_packet(self,data_link_layer_packet):
+        '''Dispatch packet to data link layer'''
         s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
         s.bind((self.interface, socket.SOCK_RAW))
         s.send(data_link_layer_packet)

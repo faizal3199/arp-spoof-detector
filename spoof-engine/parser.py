@@ -2,9 +2,11 @@ from packets import *
 
 class PacketParser(object):
     def __init__(self,data):
+        '''Pass the string data to parse'''
         self.packet_data = data
 
     def __fetch_format(self,name):
+        '''Fetch packet format by a name'''
         if name == 'ARP':
             return ARPStructure.data_format
         elif name == 'ETH':
@@ -16,11 +18,12 @@ class PacketParser(object):
         return None
 
     def get_parsed_data(self):
+        '''Get parsed data for a string'''
         packet_offset = 0
         self.parsed_data = {}
         packet_offset = self.parse_protocol('ETH',packet_offset)
 
-
+        # Find packet type and parse accordingly
         if self.parsed_data['eth_type'] == ETHStructure.ARP_CODE: #ARP
             packet_offset = self.parse_protocol('ARP',packet_offset)
 
@@ -33,6 +36,7 @@ class PacketParser(object):
         return self.parsed_data
 
     def parse_protocol(self,name,offset):
+        '''Parse a string to get protocol from a specific offset'''
         data_format = self.__fetch_format(name)
 
         headers_data = self.packet_data[offset:offset+data_format['length']]
@@ -45,6 +49,8 @@ class PacketParser(object):
         return offset
 
     def get_packet_string(self,data):
+        '''Change a dict format packet into
+        string. Provide 'None' in initialization'''
         if data['eth_type']==ETHStructure.ARP_CODE:
             data_to_pack = []
 
@@ -76,6 +82,8 @@ class PacketParser(object):
         return None
 
     def ip_checksum(self,ip_header_tmp, size):
+        '''Fetch checksum data for a given string.
+        Excepts a hex encoded string and its size(in bytes)'''
         ip_header = [ip_header_tmp[i:i+2] for i in range(0,len(ip_header_tmp),2)]
         cksum = 0
         pointer = 0

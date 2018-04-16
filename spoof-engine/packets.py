@@ -1,4 +1,5 @@
 import struct
+
 class ETHStructure(object):
 	IP_CODE = '\x08\x00'
 	ARP_CODE = '\x08\x06'
@@ -12,6 +13,7 @@ class ETHStructure(object):
 		pass
 
 	def get_packet(self,data):
+		'''Get packet string'''
 		to_pack_data = []
 		for x in self.data_format['format']:
 			to_pack_data += [data[x]]
@@ -37,6 +39,7 @@ class ARPStructure(object):
 		pass
 
 	def get_packet(self,data):
+		'''Get packet string'''
 		to_pack_data = []
 		for x in self.data_format['format']:
 			to_pack_data += [data[x]]
@@ -65,6 +68,7 @@ class IPStructure(object):
 		pass
 
 	def get_packet(self,data):
+		'''Get packet string'''
 		to_pack_data = []
 		for x in self.data_format['format']:
 			to_pack_data += [data[x]]
@@ -90,6 +94,7 @@ class ICMPStructure(object):
 		pass
 
 	def get_packet(self,data):
+		'''Get packet string'''
 		to_pack_data = []
 		for x in self.data_format['format']:
 			to_pack_data += [data[x]]
