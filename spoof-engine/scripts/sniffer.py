@@ -37,8 +37,8 @@ class PacketSniffer(object):
         while True:
             # Handle each packet by using pcap's default callback function
             sniffer.dispatch(1, self.handle_packet)
-            if statsCount == 1000:
-                print sniffer.stats()
+            if statsCount == 40000:
+                print("Total packets recived:%d\nAmong them dropped by os:%d\nDropped by network:%d" % sniffer.stats())
                 statsCount = 0
             else:
                 statsCount += 1

@@ -92,12 +92,13 @@ class SpoofDetectorEngine(object):
 
             if self.ICMPTable[data['arp_source_ip']] != None: #NO reply still
                 self.responseObject.alert(data)
-                print('\n**************ICMP verification failed for %s ************\n' % socket.inet_ntoa(data['arp_source_ip']))
+                print('\nHost verification fai;ed for %s at %s\n'%(socket.inet_ntoa(data['arp_source_ip']),data['arp_source_mac'].encode('hex')))
                 return False
             else:
-                print('\n**************ICMP verification successfull for %s ************\n'%socket.inet_ntoa(data['arp_source_ip']))
+                print('\nHost verification succesfull for %s at %s\n'%(socket.inet_ntoa(data['arp_source_ip']),data['arp_source_mac'].encode('hex')))
                 #Entry is safe. Update our tables
-                self.verifiedHost[data['arp_source_ip']] == data['eth_source_mac']
+                self.verifiedHost[data['arp_source_ip']] = data['eth_source_mac']
+                print(self.verifiedHost)
         else:
             self.responseObject.alert(data)
             return False
