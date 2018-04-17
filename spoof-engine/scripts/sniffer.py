@@ -16,7 +16,7 @@ class PacketSniffer(object):
         self.userDataArray = yaml.safe_load(open(self.configArray['userDataJsonFile'],'r'))
 
         self.interface = self.userDataArray['interfaceName']
-        # self.interface = 'enp3s0'
+        self.wait_for_interface()
         PacketSniffer.myMAC = self.getMyMAC()
         PacketSniffer.myIP = self.getMyIP()
 
@@ -30,8 +30,6 @@ class PacketSniffer(object):
 
         #Start spoof detection engine
         self.spoofEngine = SpoofDetectorEngine(self.myMAC,self.myIP,self.interface)
-        sys.stdout.write('Starting read\n')
-        sys.stdout.flush()
 
         statsCount = 0
         while True:
@@ -76,6 +74,21 @@ class PacketSniffer(object):
         t.start()
         return True
 
+    def wait_for_interface(self):
+        '''Waits till the required network interface is ready for use'''
+        print('Waiting for interface: %s'%(self.interface))
+        import time
+        isNetworkUp = False
+
+        while not isNetworkUp:
+            for x in pcap.findalldevs(): #Fetch list of all network interface
+                if x[0] == self.interface and x[3] == pcap.DLT_IEEE802: #pcap.DLT_IEEE802=6
+                    isNetworkUp = True
+            time.sleep(3)
+
+        print('Interface %s is ready for capturing'%(self.interface))
+        return True
+
     def getMyMAC(self):
         '''Fetches MAC address for any interface'''
         import fcntl
@@ -96,5 +109,5 @@ if __name__ == "__main__":
         packetSnifferObject.start()
     except Exception as e:
         print('Error occured')
-        print(e.message)
+        print("Message: %s\nAarguments: %s"%(e.message,e.args))
         exit(1)
