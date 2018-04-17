@@ -5,7 +5,7 @@ from gi.repository import Notify,GdkPixbuf
 class ResponseModule(object):
     lastMessage = None
 
-    def __init__(self,myMAC,myIP):
+    def __init__(self,myMAC='notSet',myIP='notSet'):
         '''Initialize all configuration variables and notification object'''
         import yaml,os
 
@@ -23,6 +23,12 @@ class ResponseModule(object):
         self.notifyObject = Notify.Notification.new("Title","Notification body")
         self.notifyObject.set_app_name("ARP spoof detector")
         self.notifyObject.set_urgency(2)
+
+    def update_network_config(self,myMAC,myIP):
+        '''Update network configs'''
+        self.myMAC = myMAC
+        self.myIP = myIP
+        return True
 
     def alert_user(self,data):
         '''Create alert notification for user'''

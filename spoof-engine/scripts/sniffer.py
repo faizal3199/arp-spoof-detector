@@ -18,12 +18,15 @@ class PacketSniffer(object):
 
         self.interface = self.userDataArray['interfaceName']
 
-        self.responseObject = ResponseModule(self.myMAC,self.myIP)
+        self.responseObject = ResponseModule()
         self.responseObject.show_notification({'title':'ARP Spoof Detector Status','message':'Waiting for interface "%s".'%(self.interface),'type':'safe'})
 
         self.wait_for_interface()
         PacketSniffer.myMAC = self.getMyMAC()
         PacketSniffer.myIP = self.getMyIP()
+
+        # Update network configs
+        self.responseObject.update_network_config(self.myMAC,self.myIP)
 
         print('My MAC: %s'%(PacketSniffer.myMAC))
         print('My IP: %s'%(PacketSniffer.myIP))
