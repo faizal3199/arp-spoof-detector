@@ -55,7 +55,7 @@ class ResponseModule(object):
         else:
             image = GdkPixbuf.Pixbuf.new_from_file(self.configArray['safeIcon'])
 
-        notification.set_icon_from_pixbuf(image)
+        self.notifyObject.set_icon_from_pixbuf(image)
         self.notifyObject.update(data.get('title'),data.get('message'))
         self.notifyObject.show() #Make Notification visible
         return True
