@@ -1,6 +1,6 @@
 import gi,time
 gi.require_version('Notify', '0.7')
-from gi.repository import Notify
+from gi.repository import Notify,GdkPixbuf
 
 class ResponseModule(object):
     lastMessage = None
@@ -27,7 +27,8 @@ class ResponseModule(object):
     def alert_user(self,data):
         '''Create alert notification for user'''
         message = {'title':'ALERT!',
-                    'message':'IP %s is being attempted to spoof.' % data['pretend_ip']}
+                    'message':'IP %s is being attempted to spoof from MAC %s.' % (data['pretend_ip'],data['pretend_mac']),
+                    'type':'danger'}
         self.show_notification(message)
         return True
 
@@ -35,14 +36,21 @@ class ResponseModule(object):
         '''Create alert notification to send to server for admin'''
         message = data.copy() # Make a copy of object -- Python things
         message.pop('time') # Let server set the time
+        message.pop('type')
         self.send_stats(message,self.configArray['serverSubmitEndPoint'])
 
     def show_notification(self,data):
         '''Function to display notification.
-        data = {'title':'xyz','message':'message here'}
+        data = {'title':'xyz','message':'message here','type':'danger|safe'}
         Notification urgency level is set to 2(max)'''
 
-        self.notifyObject.update(data['title'],data['message'])
+        if data.get('type') == 'danger':
+            image = GdkPixbuf.Pixbuf.new_from_file(self.configArray['dangerIcon'])
+        else:
+            image = GdkPixbuf.Pixbuf.new_from_file(self.configArray['safeIcon'])
+
+        notification.set_icon_from_pixbuf(image)
+        self.notifyObject.update(data.get('title'),data.get('message'))
         self.notifyObject.show() #Make Notification visible
         return True
 
@@ -57,14 +65,15 @@ class ResponseModule(object):
     def alert(self,data):
         '''Main function called by other modules to send alert to admin and user'''
         mac = ':'.join([x.encode('hex') for x in data['arp_source_mac']])
-        ip = '.'.join([str(ord(x)) for x in data['arp_source_mac']])
+        ip = '.'.join([str(ord(x)) for x in data['arp_source_ip']])
 
         attack_details = {'victim_mac':self.myMAC,
                             'victim_ip':self.myIP,
                             'pretend_mac':mac,
                             'pretend_ip':ip,
                             'employee_id':self.userDataArray['employee_id'],
-                            'time':time.time()}
+                            'time':time.time(),
+                            'type':'danger'}
         #Send alerts
         self.alert_user(attack_details)
         self.alert_admin(attack_details)

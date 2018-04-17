@@ -1,6 +1,7 @@
 import pcap,socket,threading,sys
 from parser import *
 from engine import SpoofDetectorEngine
+from response import ResponseModule
 
 class PacketSniffer(object):
     myMac = None
@@ -16,6 +17,10 @@ class PacketSniffer(object):
         self.userDataArray = yaml.safe_load(open(self.configArray['userDataJsonFile'],'r'))
 
         self.interface = self.userDataArray['interfaceName']
+
+        self.responseObject = ResponseModule(self.myMAC,self.myIP)
+        self.responseObject.show_notification({'title':'ARP Spoof Detector Status','message':'Waiting for interface "%s".'%(self.interface),'type':'safe'})
+
         self.wait_for_interface()
         PacketSniffer.myMAC = self.getMyMAC()
         PacketSniffer.myIP = self.getMyIP()
@@ -30,13 +35,14 @@ class PacketSniffer(object):
 
         #Start spoof detection engine
         self.spoofEngine = SpoofDetectorEngine(self.myMAC,self.myIP,self.interface)
+        self.responseObject.show_notification({'title':'ARP Spoof Detector Status','message':'Software is running in background.','type':'safe'})
 
         statsCount = 0
         while True:
             # Handle each packet by using pcap's default callback function
             sniffer.dispatch(1, self.handle_packet)
             if statsCount == 40000:
-                print("Total packets recived:%d\nAmong them dropped by os:%d\nDropped by network:%d" % sniffer.stats())
+                self.responseObject.show_notification({'message':"Total packets parsed:%d\nDropped by OS:%d\nDropped by network:%d" % sniffer.stats(),'title':'ARP Spoof Detector Status','type':'safe'})
                 statsCount = 0
             else:
                 statsCount += 1

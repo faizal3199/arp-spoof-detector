@@ -1,7 +1,10 @@
 {
   "serverURL":"http://172.25.14.89:8000/",
   "serverSignUpEndPoint":"signup",
-  "serverSubmitEndPoint":"/infection/submit",
+  "serverSubmitEndPoint":"infection/submit",
   "userDataJsonFile":"/opt/arp-spoof-detector/spoof-engine/config/userData.json",
-  "installDir":"/opt/arp-spoof-detector/"
+  "installDir":"/opt/arp-spoof-detector/",
+  "iconDir":"/opt/arp-spoof-detector/spoof-engine/icons/",
+  "safeIcon":"/opt/arp-spoof-detector/spoof-engine/icons/safe_icon.png",
+  "dangerIcon":"/opt/arp-spoof-detector/spoof-engine/icons/danger_icon.png"
 }

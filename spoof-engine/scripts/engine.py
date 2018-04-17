@@ -30,8 +30,7 @@ class SpoofDetectorEngine(object):
         # Do basic check by comparing datalink layer address with ARP's
         consistency_check = (data['eth_source_mac'] == data['arp_source_mac'])
         if not consistency_check:
-            self.responseObject.alert(data)
-            print('consistency_check failed')
+            self.responseObject.alert(data)# Failed consistency check
             return False
 
         #Handle gratuitous ARP replies
@@ -39,8 +38,7 @@ class SpoofDetectorEngine(object):
         gratuitous = gratuitous or (data['arp_target_mac'] in [self.broadcastMAC,self.zeroMAC])
 
         if not gratuitous and data['eth_target_mac'] != data['arp_target_mac']:
-            self.responseObject.alert(data)
-            print('consistency_check failed')
+            self.responseObject.alert(data) # Failed consistency check
             return False
 
         # Consider the reply packet if system has sent request or it's gratuitous
@@ -91,15 +89,21 @@ class SpoofDetectorEngine(object):
             time.sleep(5) #Wait 5 seconds for  reply
 
             if self.ICMPTable[data['arp_source_ip']] != None: #NO reply still
+                # unsafe Host
                 self.responseObject.alert(data)
-                print('\nHost verification fai;ed for %s at %s\n'%(socket.inet_ntoa(data['arp_source_ip']),data['arp_source_mac'].encode('hex')))
                 return False
             else:
-                print('\nHost verification succesfull for %s at %s\n'%(socket.inet_ntoa(data['arp_source_ip']),data['arp_source_mac'].encode('hex')))
                 #Entry is safe. Update our tables
+                self.responseObject.show_notification({
+                'title':'ARP Spoof Detector Alert',
+                'message':'Host %s (%s) added to verified hosts'%(socket.inet_ntoa(data['arp_source_ip']),':'.join([x.encode('hex') for x in data['arp_source_mac']])),
+                'type':'safe'
+                })
                 self.verifiedHost[data['arp_source_ip']] = data['eth_source_mac']
                 print(self.verifiedHost)
         else:
+            # Our machine didn't request nor was it gratuitous
+            # So creat alert
             self.responseObject.alert(data)
             return False
 
