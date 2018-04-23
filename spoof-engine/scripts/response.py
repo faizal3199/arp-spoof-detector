@@ -81,8 +81,8 @@ class ResponseModule(object):
                             'time':time.time(),
                             'type':'danger'}
         #Send alerts
-        self.alert_user(attack_details)
-        self.alert_admin(attack_details)
+        self.alert_user(attack_details.copy())
+        self.alert_admin(attack_details.copy())
 
         #Update last message
         self.lastMessage = attack_details
